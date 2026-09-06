@@ -1,0 +1,265 @@
+{
+  "type": [
+    "object",
+    "null"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "pattern": "^-?(?:0|[1-9]\\d*)$"
+    },
+    "id": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "revision": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "pattern": "^-?(?:0|[1-9]\\d*)$"
+    },
+    "createdUtc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedUtc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "selector": {
+      "type": "object",
+      "properties": {
+        "vid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "usbSerialNumber": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "interfaceNumber": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lastSeenPort": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "baudRate": {
+          "type": [
+            "string",
+            "integer"
+          ],
+          "pattern": "^-?(?:0|[1-9]\\d*)$"
+        },
+        "dataBits": {
+          "type": [
+            "string",
+            "integer"
+          ],
+          "pattern": "^-?(?:0|[1-9]\\d*)$"
+        },
+        "parity": {
+          "enum": [
+            "None",
+            "Odd",
+            "Even",
+            "Mark",
+            "Space"
+          ]
+        },
+        "stopBits": {
+          "enum": [
+            "None",
+            "One",
+            "Two",
+            "OnePointFive"
+          ]
+        },
+        "flowControl": {
+          "enum": [
+            "None",
+            "XOnXOff",
+            "RequestToSend",
+            "RequestToSendXOnXOff"
+          ]
+        },
+        "dtr": {
+          "type": "boolean"
+        },
+        "rts": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "framing": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "Available",
+            "Delimiter",
+            "Length",
+            "IdleGap"
+          ]
+        },
+        "maxBytes": {
+          "type": [
+            "string",
+            "integer"
+          ],
+          "pattern": "^-?(?:0|[1-9]\\d*)$"
+        },
+        "waitMs": {
+          "type": [
+            "string",
+            "integer"
+          ],
+          "pattern": "^-?(?:0|[1-9]\\d*)$"
+        },
+        "delimiterHex": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "length": {
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ],
+          "pattern": "^-?(?:0|[1-9]\\d*)$"
+        },
+        "idleGapMs": {
+          "type": [
+            "string",
+            "integer"
+          ],
+          "pattern": "^-?(?:0|[1-9]\\d*)$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "safety": {
+      "type": "object",
+      "properties": {
+        "allowWrites": {
+          "type": "boolean"
+        },
+        "allowSignals": {
+          "type": "boolean"
+        },
+        "maxWriteBytes": {
+          "type": [
+            "string",
+            "integer"
+          ],
+          "pattern": "^-?(?:0|[1-9]\\d*)$"
+        },
+        "minWriteIntervalMs": {
+          "type": [
+            "string",
+            "integer"
+          ],
+          "pattern": "^-?(?:0|[1-9]\\d*)$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "targetDescription": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "knowledge": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "User",
+              "Documentation",
+              "Observed",
+              "Inferred"
+            ]
+          },
+          "reference": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "confirmed": {
+            "type": "boolean",
+            "default": false
+          },
+          "validatedUtc": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "default": null
+          }
+        },
+        "required": [
+          "name",
+          "value",
+          "source"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "secretReferences": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <AssemblyName>Portster</AssemblyName>
+    <RootNamespace>Portster</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <PackAsTool>true</PackAsTool>
+    <PackageType>McpServer</PackageType>
+
+    <!-- Development uses the shared runtime; published releases include .NET. -->
+    <SelfContained>false</SelfContained>
+    <PublishSelfContained>true</PublishSelfContained>
+
+    <PublishSingleFile>true</PublishSingleFile>
+
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageId>Portster</PackageId>
+    <ToolCommandName>portster</ToolCommandName>
+    <PackageVersion>0.1.0-beta</PackageVersion>
+    <PackageTags>AI; MCP; server; stdio</PackageTags>
+    <Description>Local Windows serial-port access for MCP clients, with bounded capture, profiles, and operation auditing.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="README.md" Pack="true" PackagePath="/" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="docs/**/*.md" Pack="true" PackagePath="docs/" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="portster.example.json" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="profile.schema.json" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
+    <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
+    <PackageReference Include="System.IO.Ports" Version="10.0.11" />
+    <PackageReference Include="System.Management" Version="10.0.11" />
+  </ItemGroup>
+
+</Project>

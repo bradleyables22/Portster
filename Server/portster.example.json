@@ -1,0 +1,13 @@
+{
+  "allowedPorts": ["*"],
+  "allowWrites": true,
+  "allowSignals": true,
+  "receiveBufferBytes": 262144,
+  "maxReadBytes": 16384,
+  "maxWriteBytes": 4096,
+  "maxWaitMs": 10000,
+  "writeTimeoutMs": 2000,
+  "minWriteIntervalMs": 100,
+  "inactivityTimeoutSeconds": 900,
+  "auditPayloads": false
+}

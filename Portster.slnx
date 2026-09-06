@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Server/Server.csproj" />
+  <Project Path="Tests/Portster.Tests.csproj" />
+</Solution>
