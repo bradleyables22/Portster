@@ -60,10 +60,6 @@ Verified on Windows x64 with .NET SDK 10.0.400 on 2026-09-05.
   update succeeds and the other receives `REVISION_CONFLICT`.
 - Generated profile schema validated with valid and unknown-field inputs.
 - Self-contained publish succeeded for `win-x64` and `win-arm64`.
-- Published Windows x64 executable smoke test: server identity `Portster`,
-  19 discovered tools, successful `profile_list`, rejection of unknown nested
-  input fields, clean exit code 0. Re-run with `Tests/Smoke-Package.ps1`.
-
 The tests cover cursor replay/overruns, split delimiters, partial timeouts,
 cancellation, idle framing, malformed payloads, exclusive opens, stale handles,
 mutation contention, unknown write outcomes, port reservation during native

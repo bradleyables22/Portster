@@ -47,13 +47,6 @@ dotnet test Tests/Portster.Tests.csproj -c Release --filter "FullyQualifiedName~
 dotnet test Tests/Portster.Tests.csproj -c Release --filter "FullyQualifiedName~PersistenceFailureTests"
 ```
 
-After publishing x64, smoke-test the packaged executable, default permissions,
-clean shutdown, and strict input binding without opening hardware:
-
-```powershell
-./Tests/Smoke-Package.ps1
-```
-
 The environment-configuration tests restore changed process variables and run
 without parallel test collections. Temporary-directory cleanup verifies that its
 target remains under the dedicated Portster test directory.
