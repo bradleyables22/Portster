@@ -22,11 +22,13 @@
     <PackageId>Portster</PackageId>
     <ToolCommandName>portster</ToolCommandName>
     <PackageVersion>0.1.0-beta</PackageVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>AI; MCP; server; stdio</PackageTags>
     <Description>Local Windows serial-port access for MCP clients, with bounded capture, profiles, and operation auditing.</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\LICENSE" Link="LICENSE" CopyToPublishDirectory="PreserveNewest" />
     <None Update="README.md" Pack="true" PackagePath="/" CopyToPublishDirectory="PreserveNewest" />
     <None Update="docs/**/*.md" Pack="true" PackagePath="docs/" CopyToPublishDirectory="PreserveNewest" />
     <None Update="portster.example.json" CopyToPublishDirectory="PreserveNewest" />

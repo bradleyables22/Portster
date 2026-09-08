@@ -8,7 +8,23 @@ The server runs locally over STDIO. It receives bytes between tool calls and
 supports text or binary exchanges, captures, saved device profiles, and operation
 auditing. This release is `0.1.0-beta` and has not been published to a registry.
 
-## Setup
+> [!WARNING]
+> Serial commands and control-line changes can reset, reconfigure, erase, or
+> operate connected hardware. Confirm the voltage level, wiring, UART settings,
+> and device command set before enabling writes. Portster does not provide an
+> electrical or physical safety boundary.
+
+## Install
+
+The supported end-user installation is a self-contained Windows executable from
+GitHub Releases. Download `portster-win-x64.zip` for most Windows PCs or
+`portster-win-arm64.zip` for Windows-on-ARM, verify `SHA256SUMS`, and extract the
+whole archive. No .NET installation is required.
+
+See [Executable installation](docs/executable-installation.md) for exact
+Codex/ChatGPT desktop configuration, policy setup, verification, and upgrades.
+
+## Build from source
 
 Build with the .NET 10 SDK from the repository root:
 
@@ -73,6 +89,13 @@ the device's state unknown; writes are never retried automatically.
 - [Policy and auditing](docs/policy.md): permissions, resource limits, and audit records.
 - [Troubleshooting](docs/troubleshooting.md): error codes and hardware checks.
 - [Development](docs/development.md): builds, packaging, source layout, and verification.
+- [Executable installation](docs/executable-installation.md): release download and MCP client setup.
+- [GitHub releases](docs/releases.md): release asset contract and CI/CD workflow.
+- [Repository verification](../VERIFICATION.md): current automated and physical validation status.
 
 Windows is the only implemented platform. Physical loopback, unplug/replug,
 control-line behavior, and Windows ARM64 execution still need validation.
+
+## License
+
+Portster is available under the MIT License. See the repository's `LICENSE` file.

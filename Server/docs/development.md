@@ -47,6 +47,9 @@ dotnet publish Server -c Release -r win-arm64 --self-contained true -o artifacts
 
 Keep the entire publish directory together. Set the client's command to its
 `Portster.exe` and omit `args`. Published builds need no installed .NET runtime.
+The supported release asset names and GitHub Actions pipeline are documented in
+[GitHub releases](releases.md). End-user setup is documented in
+[Executable installation](executable-installation.md).
 
 Edit the named instruction constants in `Server/Tools/ServerInstructions.cs` and combine
 them in `ServerInstructions.All` to control the instructions sent to MCP clients.
@@ -89,7 +92,7 @@ Remaining acceptance before a stable hardware release:
 - Test physical TX/RX loopback and unplug/replug during open, read and write.
 - Verify actual DTR/RTS/break and hardware flow control on supported adapters.
 - Run on Windows ARM64 and in the intended interactive MCP host.
-- Select repository ownership, license and Registry namespace before publication.
+- Select repository ownership and Registry namespace before publication.
 
 The template Registry manifest with placeholder identity was removed. Generate a
 real manifest using the selected namespace/repository and then-current schema
