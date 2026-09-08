@@ -30,10 +30,13 @@ Beta users should choose the version from the Releases page.
 1. In **Settings > Actions > General**, ensure repository or organization policy
    allows workflows to grant `contents: write`. No personal access token is
    needed; the workflow uses its short-lived `GITHUB_TOKEN`.
-2. Protect the default branch and require the normal test workflow before merge.
+2. Protect `master`. If pull-request CI is configured, require its test check
+   before merge.
 3. Create annotated, preferably signed, SemVer tags such as `v0.1.0-beta` or
-   `v1.0.0`. The tag is the release trigger and source of the executable version.
-4. Add the workflow below as `.github/workflows/release.yml`.
+   `v1.0.0` on a commit contained in `master`. The tag is the release trigger and
+   source of the executable version.
+4. Keep the checked-in [release workflow](../../.github/workflows/release.yml)
+   enabled in the repository's **Actions** tab.
 5. After validating a beta release, consider enabling immutable releases in the
    repository settings. Publish as a draft first if assets need manual review.
 
@@ -42,116 +45,14 @@ attestation uses OpenID Connect and the workflow's temporary token.
 
 ## Release workflow
 
-This workflow tests once, publishes both Windows runtime identifiers, creates
-stable ZIP names and checksums, attests the ZIPs, and attaches all three files to
-a GitHub Release. Third-party release actions are unnecessary because the GitHub
-CLI is already installed on GitHub-hosted runners.
+The checked-in workflow tests once, publishes both Windows runtime identifiers,
+creates stable ZIP names and checksums, attests the ZIPs, and attaches all three
+files to a GitHub Release. It fetches `origin/master` and rejects the release
+unless the tagged commit is part of that branch. No release branch is used.
+Third-party release actions are unnecessary because the GitHub CLI is already
+installed on GitHub-hosted runners.
 
-```yaml
-name: Release Windows executables
-
-on:
-  push:
-    tags:
-      - "v*.*.*"
-
-permissions:
-  contents: write
-  id-token: write
-  attestations: write
-  artifact-metadata: write
-
-jobs:
-  release:
-    runs-on: windows-latest
-    timeout-minutes: 30
-
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-      DOTNET_NOLOGO: "1"
-
-    steps:
-      - name: Check out the tagged source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install .NET SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: "10.0.400"
-
-      - name: Read and validate the version tag
-        shell: pwsh
-        run: |
-          $tag = "${{ github.ref_name }}"
-          if ($tag -notmatch '^v(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$') {
-            throw "Tag '$tag' is not a supported SemVer release tag."
-          }
-          "PORTSTER_VERSION=$($Matches.version)" >> $env:GITHUB_ENV
-
-      - name: Restore and test
-        shell: pwsh
-        run: |
-          dotnet restore Portster.slnx
-          dotnet test Portster.slnx -c Release --no-restore
-
-      - name: Publish and package Windows executables
-        shell: pwsh
-        run: |
-          $releaseDirectory = Join-Path $env:GITHUB_WORKSPACE 'artifacts\release'
-          New-Item -ItemType Directory -Path $releaseDirectory -Force | Out-Null
-
-          foreach ($rid in @('win-x64', 'win-arm64')) {
-            $publishDirectory = Join-Path $env:GITHUB_WORKSPACE "artifacts\publish\$rid"
-            dotnet publish Server/Server.csproj `
-              -c Release `
-              -r $rid `
-              --self-contained true `
-              --no-restore `
-              -p:Version=$env:PORTSTER_VERSION `
-              -o $publishDirectory
-
-            $archive = Join-Path $releaseDirectory "portster-$rid.zip"
-            Compress-Archive -Path "$publishDirectory\*" -DestinationPath $archive
-          }
-
-          Get-ChildItem -LiteralPath $releaseDirectory -Filter '*.zip' |
-            Sort-Object Name |
-            ForEach-Object {
-              $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-              "$hash *$($_.Name)"
-            } |
-            Set-Content -LiteralPath (Join-Path $releaseDirectory 'SHA256SUMS') -Encoding ascii
-
-      - name: Attest release archives
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
-        with:
-          subject-path: artifacts/release/*.zip
-
-      - name: Create the GitHub Release
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $releaseArguments = @(
-            'release', 'create', '${{ github.ref_name }}',
-            'artifacts/release/portster-win-x64.zip',
-            'artifacts/release/portster-win-arm64.zip',
-            'artifacts/release/SHA256SUMS',
-            '--verify-tag',
-            '--generate-notes',
-            '--title', "Portster $env:PORTSTER_VERSION"
-          )
-
-          if ($env:PORTSTER_VERSION.Contains('-')) {
-            $releaseArguments += '--prerelease'
-          } else {
-            $releaseArguments += '--latest'
-          }
-
-          gh @releaseArguments
-```
-
-The action references are pinned to reviewed commit SHAs. Dependabot can keep
+The action references are pinned to versioned commit SHAs. Dependabot can keep
 them current; review its updates before merging. Pinning the .NET SDK also makes
 the toolchain reproducible. Update that pin deliberately when adopting a newer
 SDK servicing release.
@@ -159,9 +60,12 @@ SDK servicing release.
 ## Publish a release
 
 Run the normal tests locally, commit the release notes and version-related docs,
-then create and push the tag:
+make sure that commit is on `master`, then create and push the tag:
 
 ```powershell
+git switch master
+git pull --ff-only origin master
+dotnet test Portster.slnx -c Release
 git tag -s v0.1.0-beta -m "Portster 0.1.0-beta"
 git push origin v0.1.0-beta
 ```

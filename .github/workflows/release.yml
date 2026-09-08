@@ -1,0 +1,126 @@
+name: Release Windows executables
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Require the release commit to be on master
+        shell: pwsh
+        run: |
+          git fetch --no-tags origin +refs/heads/master:refs/remotes/origin/master
+          if ($LASTEXITCODE -ne 0) {
+            throw "Could not fetch origin/master."
+          }
+
+          $tagExpression = "${{ github.ref_name }}^{commit}"
+          $tagCommit = (git rev-parse $tagExpression).Trim()
+          if ($LASTEXITCODE -ne 0) {
+            throw "Could not resolve tag '${{ github.ref_name }}' to a commit."
+          }
+
+          git merge-base --is-ancestor $tagCommit refs/remotes/origin/master
+          if ($LASTEXITCODE -ne 0) {
+            throw "Release tag '${{ github.ref_name }}' must point to a commit on master."
+          }
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "10.0.400"
+
+      - name: Read and validate the version tag
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ($tag -notmatch '^v(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$') {
+            throw "Tag '$tag' is not a supported SemVer release tag."
+          }
+          "PORTSTER_VERSION=$($Matches.version)" >> $env:GITHUB_ENV
+
+      - name: Restore and test
+        shell: pwsh
+        run: |
+          dotnet restore Portster.slnx
+          dotnet test Portster.slnx -c Release --no-restore
+
+      - name: Publish and package Windows executables
+        shell: pwsh
+        run: |
+          $releaseDirectory = Join-Path $env:GITHUB_WORKSPACE 'artifacts\release'
+          New-Item -ItemType Directory -Path $releaseDirectory -Force | Out-Null
+
+          foreach ($rid in @('win-x64', 'win-arm64')) {
+            $publishDirectory = Join-Path $env:GITHUB_WORKSPACE "artifacts\publish\$rid"
+            dotnet publish Server/Server.csproj `
+              -c Release `
+              -r $rid `
+              --self-contained true `
+              --no-restore `
+              -p:Version=$env:PORTSTER_VERSION `
+              -o $publishDirectory
+
+            $archive = Join-Path $releaseDirectory "portster-$rid.zip"
+            Compress-Archive -Path "$publishDirectory\*" -DestinationPath $archive
+          }
+
+          Get-ChildItem -LiteralPath $releaseDirectory -Filter '*.zip' |
+            Sort-Object Name |
+            ForEach-Object {
+              $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+              "$hash *$($_.Name)"
+            } |
+            Set-Content -LiteralPath (Join-Path $releaseDirectory 'SHA256SUMS') -Encoding ascii
+
+      - name: Attest release archives
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: artifacts/release/*.zip
+
+      - name: Create the GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $releaseArguments = @(
+            'release', 'create', '${{ github.ref_name }}',
+            'artifacts/release/portster-win-x64.zip',
+            'artifacts/release/portster-win-arm64.zip',
+            'artifacts/release/SHA256SUMS',
+            '--verify-tag',
+            '--generate-notes',
+            '--title', "Portster $env:PORTSTER_VERSION"
+          )
+
+          if ($env:PORTSTER_VERSION.Contains('-')) {
+            $releaseArguments += '--prerelease'
+          } else {
+            $releaseArguments += '--latest'
+          }
+
+          gh @releaseArguments

@@ -30,24 +30,26 @@ Build with the .NET 10 SDK from the repository root:
 
 ```powershell
 dotnet build Portster.slnx
+dotnet publish Server/Server.csproj -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
+
+Use `win-arm64` instead of `win-x64` when targeting Windows-on-ARM.
 
 Portster allows all Windows COM ports, writes, and signal control by default.
 No policy file is required. Timeouts, buffer sizes, and rate limits use built-in
 defaults.
 
-Configure your MCP client to launch the built server. For example:
+Configure your MCP client to launch the extracted or locally published
+`Portster.exe`. For Codex:
 
-```json
-{
-  "command": "dotnet",
-  "args": ["C:\\source\\Portster\\Server\\bin\\Debug\\net10.0\\Portster.dll"]
-}
+```toml
+[mcp_servers.portster]
+command = 'C:\Users\YOUR_NAME\Apps\Portster\v0.1.0-beta\Portster.exe'
+default_tools_approval_mode = "writes"
 ```
 
-Replace those paths with your actual locations. Launch the built DLL or published
-executable from the client: build output must not enter the JSON-RPC stream.
-Server diagnostics go to stderr.
+Replace the path and version with the actual installation location. Server
+diagnostics go to stderr; stdout remains reserved for MCP JSON-RPC messages.
 
 To restrict access or change limits, copy `Server/portster.example.json` outside
 the repository and point the client's `PORTSTER_CONFIG` environment variable at

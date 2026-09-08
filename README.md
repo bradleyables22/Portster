@@ -45,31 +45,27 @@ Development requires the .NET 10 SDK. From the repository root:
 ```powershell
 dotnet build Portster.slnx
 dotnet test Portster.slnx
+dotnet publish Server/Server.csproj -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-The development build uses the installed .NET runtime. Release publishing
-produces self-contained, single-file Windows executables.
+Use `win-arm64` instead of `win-x64` when targeting Windows-on-ARM. The publish
+command produces the same self-contained executable layout used by releases.
 
 ## Configure an MCP client
 
-For an installed release, configure the client to launch the absolute path to
-`Portster.exe`; the exact Codex and ChatGPT desktop setup is in
-[Executable installation](Server/docs/executable-installation.md).
+Configure the client to launch the absolute path to the extracted or locally
+published `Portster.exe`. For Codex, add this to `~/.codex/config.toml`:
 
-When developing from source, a generic MCP server entry can launch the built
-DLL instead:
-
-```json
-{
-  "command": "dotnet",
-  "args": ["C:\\source\\Portster\\Server\\bin\\Debug\\net10.0\\Portster.dll"]
-}
+```toml
+[mcp_servers.portster]
+command = 'C:\Users\YOUR_NAME\Apps\Portster\v0.1.0-beta\Portster.exe'
+default_tools_approval_mode = "writes"
 ```
 
-Replace the path with the absolute path on your machine. Launch the built DLL or
-published executable rather than a build command: compiler output must not enter
-the JSON-RPC stream. Portster writes diagnostics to stderr and reserves stdout
-for MCP messages.
+Replace the path and version with the real installation location. The exact
+Codex and ChatGPT desktop setup, including optional environment variables, is in
+[Executable installation](Server/docs/executable-installation.md). Portster
+writes diagnostics to stderr and reserves stdout for MCP messages.
 
 Portster permits all Windows COM ports, writes, and signal control by default.
 To restrict access or change limits, copy

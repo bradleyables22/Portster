@@ -15,7 +15,7 @@ dotnet run --project Server --no-build
 ```
 
 The process waits for MCP messages. STDIO is reserved for JSON-RPC; diagnostics go
-to stderr. For client configuration, launch the built DLL or published executable
+to stderr. For client configuration, publish first and launch `Portster.exe`
 rather than a build command, so compiler output cannot enter the protocol stream.
 
 To customize access or limits, copy `Server/portster.example.json` outside the
@@ -24,18 +24,17 @@ port opens; `allowWrites: false` and `allowSignals: false` disable those
 operations. Omitted fields use the permissive defaults. No MCP tool edits this
 server policy; changes require a restart.
 
-Example MCP server entry with optional policy and project storage overrides
-(the outer configuration format depends on the client):
+Example Codex MCP server entry for a locally published executable, with optional
+policy and project storage overrides:
 
-```json
-{
-  "command": "dotnet",
-  "args": ["C:\\source\\Portster\\Server\\bin\\Debug\\net10.0\\Portster.dll"],
-  "env": {
-    "PORTSTER_CONFIG": "C:\\Portster\\policy.json",
-    "PORTSTER_PROJECT": "C:\\source\\hardware-project"
-  }
-}
+```toml
+[mcp_servers.portster]
+command = 'C:\source\Portster\artifacts\win-x64\Portster.exe'
+default_tools_approval_mode = "writes"
+
+[mcp_servers.portster.env]
+PORTSTER_CONFIG = 'C:\Portster\policy.json'
+PORTSTER_PROJECT = 'C:\source\hardware-project'
 ```
 
 Publish builds with .NET included:
