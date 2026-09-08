@@ -44,11 +44,11 @@ Configure your MCP client to launch the extracted or locally published
 
 ```toml
 [mcp_servers.portster]
-command = 'C:\Users\YOUR_NAME\Apps\Portster\v0.1.0-beta\Portster.exe'
+command = 'C:\Users\YOUR_NAME\Apps\Portster\CURRENT_RELEASE\Portster.exe'
 default_tools_approval_mode = "writes"
 ```
 
-Replace the path and version with the actual installation location. Server
+Replace the placeholders with the actual installation location. Server
 diagnostics go to stderr; stdout remains reserved for MCP JSON-RPC messages.
 
 To restrict access or change limits, copy `Server/portster.example.json` outside

@@ -21,7 +21,7 @@ Keep those files together after extraction.
 5. Confirm that the displayed hash matches the asset's line in `SHA256SUMS`.
    Do not run an archive whose checksum differs.
 6. Extract the ZIP into a versioned, user-controlled directory such as
-   `C:\Users\YOUR_NAME\Apps\Portster\v0.1.0-beta`.
+   `C:\Users\YOUR_NAME\Apps\Portster\v2026.09.08.17`.
 
 Published builds include the .NET runtime. The target computer does not need the
 .NET SDK or a separate .NET runtime. Windows may still show its normal warning
@@ -41,7 +41,7 @@ Codex users can instead add this entry to the user configuration at
 
 ```toml
 [mcp_servers.portster]
-command = 'C:\Users\YOUR_NAME\Apps\Portster\v0.1.0-beta\Portster.exe'
+command = 'C:\Users\YOUR_NAME\Apps\Portster\v2026.09.08.17\Portster.exe'
 enabled = true
 required = false
 startup_timeout_sec = 10

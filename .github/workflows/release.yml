@@ -2,8 +2,8 @@ name: Release Windows executables
 
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - master
 
 concurrency:
   group: release-${{ github.ref }}
@@ -25,43 +25,28 @@ jobs:
       DOTNET_NOLOGO: "1"
 
     steps:
-      - name: Check out the tagged source
+      - name: Check out master
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Require the release commit to be on master
-        shell: pwsh
-        run: |
-          git fetch --no-tags origin +refs/heads/master:refs/remotes/origin/master
-          if ($LASTEXITCODE -ne 0) {
-            throw "Could not fetch origin/master."
-          }
-
-          $tagExpression = "${{ github.ref_name }}^{commit}"
-          $tagCommit = (git rev-parse $tagExpression).Trim()
-          if ($LASTEXITCODE -ne 0) {
-            throw "Could not resolve tag '${{ github.ref_name }}' to a commit."
-          }
-
-          git merge-base --is-ancestor $tagCommit refs/remotes/origin/master
-          if ($LASTEXITCODE -ne 0) {
-            throw "Release tag '${{ github.ref_name }}' must point to a commit on master."
-          }
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "10.0.400"
 
-      - name: Read and validate the version tag
+      - name: Create the calendar version
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          if ($tag -notmatch '^v(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$') {
-            throw "Tag '$tag' is not a supported SemVer release tag."
-          }
-          "PORTSTER_VERSION=$($Matches.version)" >> $env:GITHUB_ENV
+          $now = [DateTime]::UtcNow
+          $dateTag = $now.ToString('yyyy.MM.dd')
+          $buildVersion = "$($now.Year).$($now.Month).$($now.Day)"
+          $shortCommit = $env:GITHUB_SHA.Substring(0, 7)
+          $releaseTag = "v$dateTag.$env:GITHUB_RUN_NUMBER"
+
+          "PORTSTER_RELEASE_TAG=$releaseTag" >> $env:GITHUB_ENV
+          "PORTSTER_VERSION=$buildVersion" >> $env:GITHUB_ENV
+          "PORTSTER_INFORMATIONAL_VERSION=$buildVersion.$env:GITHUB_RUN_NUMBER+sha.$shortCommit" >> $env:GITHUB_ENV
+          "Release: $releaseTag" >> $env:GITHUB_STEP_SUMMARY
+          "Commit: $env:GITHUB_SHA" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Restore and test
         shell: pwsh
@@ -83,6 +68,7 @@ jobs:
               --self-contained true `
               --no-restore `
               -p:Version=$env:PORTSTER_VERSION `
+              -p:InformationalVersion=$env:PORTSTER_INFORMATIONAL_VERSION `
               -o $publishDirectory
 
             $archive = Join-Path $releaseDirectory "portster-$rid.zip"
@@ -108,19 +94,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $releaseArguments = @(
-            'release', 'create', '${{ github.ref_name }}',
+            'release', 'create', $env:PORTSTER_RELEASE_TAG,
             'artifacts/release/portster-win-x64.zip',
             'artifacts/release/portster-win-arm64.zip',
             'artifacts/release/SHA256SUMS',
-            '--verify-tag',
+            '--target', '${{ github.sha }}',
             '--generate-notes',
-            '--title', "Portster $env:PORTSTER_VERSION"
+            '--latest',
+            '--title', "Portster $env:PORTSTER_RELEASE_TAG",
+            '--notes', "Automated build from master commit ${{ github.sha }}."
           )
-
-          if ($env:PORTSTER_VERSION.Contains('-')) {
-            $releaseArguments += '--prerelease'
-          } else {
-            $releaseArguments += '--latest'
-          }
 
           gh @releaseArguments

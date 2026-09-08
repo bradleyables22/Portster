@@ -58,11 +58,11 @@ published `Portster.exe`. For Codex, add this to `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.portster]
-command = 'C:\Users\YOUR_NAME\Apps\Portster\v0.1.0-beta\Portster.exe'
+command = 'C:\Users\YOUR_NAME\Apps\Portster\CURRENT_RELEASE\Portster.exe'
 default_tools_approval_mode = "writes"
 ```
 
-Replace the path and version with the real installation location. The exact
+Replace the placeholders with the real installation location. The exact
 Codex and ChatGPT desktop setup, including optional environment variables, is in
 [Executable installation](Server/docs/executable-installation.md). Portster
 writes diagnostics to stderr and reserves stdout for MCP messages.

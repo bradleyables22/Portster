@@ -22,8 +22,8 @@ permanent URL such as:
 https://github.com/bradleyables22/Portster/releases/latest/download/portster-win-x64.zip
 ```
 
-The `releases/latest` route selects the newest full release, not a prerelease.
-Beta users should choose the version from the Releases page.
+Every successful `master` build is published as the latest release, so this URL
+always selects the newest successful build.
 
 ## Repository setup
 
@@ -32,13 +32,10 @@ Beta users should choose the version from the Releases page.
    needed; the workflow uses its short-lived `GITHUB_TOKEN`.
 2. Protect `master`. If pull-request CI is configured, require its test check
    before merge.
-3. Create annotated, preferably signed, SemVer tags such as `v0.1.0-beta` or
-   `v1.0.0` on a commit contained in `master`. The tag is the release trigger and
-   source of the executable version.
-4. Keep the checked-in [release workflow](../../.github/workflows/release.yml)
+3. Keep the checked-in [release workflow](../../.github/workflows/release.yml)
    enabled in the repository's **Actions** tab.
-5. After validating a beta release, consider enabling immutable releases in the
-   repository settings. Publish as a draft first if assets need manual review.
+4. After validating the pipeline, consider enabling immutable releases in the
+   repository settings.
 
 Do not put signing keys or tokens in the repository. GitHub's artifact
 attestation uses OpenID Connect and the workflow's temporary token.
@@ -47,10 +44,15 @@ attestation uses OpenID Connect and the workflow's temporary token.
 
 The checked-in workflow tests once, publishes both Windows runtime identifiers,
 creates stable ZIP names and checksums, attests the ZIPs, and attaches all three
-files to a GitHub Release. It fetches `origin/master` and rejects the release
-unless the tagged commit is part of that branch. No release branch is used.
+files to a GitHub Release. A push or pull-request merge to `master` triggers it;
+no release branch or manually created tag is used. GitHub Releases still require
+a tag internally, so the workflow creates one automatically in the form
+`vYYYY.MM.DD.RUN`, such as `v2026.09.08.17`. The date is UTC and the final number
+is GitHub's unique run number for this workflow.
+
 Third-party release actions are unnecessary because the GitHub CLI is already
-installed on GitHub-hosted runners.
+installed on GitHub-hosted runners. The CLI creates the automatic tag directly
+on the exact `master` commit that triggered the run.
 
 The action references are pinned to versioned commit SHAs. Dependabot can keep
 them current; review its updates before merging. Pinning the .NET SDK also makes
@@ -59,34 +61,25 @@ SDK servicing release.
 
 ## Publish a release
 
-Run the normal tests locally, commit the release notes and version-related docs,
-make sure that commit is on `master`, then create and push the tag:
+In Visual Studio, commit the changes to `master` and select **Push** or **Sync**.
+If changes are developed on another branch, merge its pull request into `master`
+instead. That is the entire release operation; do not create a tag manually.
 
-```powershell
-git switch master
-git pull --ff-only origin master
-dotnet test Portster.slnx -c Release
-git tag -s v0.1.0-beta -m "Portster 0.1.0-beta"
-git push origin v0.1.0-beta
-```
+In GitHub, open **Actions** and watch the **Release Windows executables** job.
+After it succeeds, open **Releases** and confirm that both ZIPs, `SHA256SUMS`,
+and the repository's attestation record are present before sharing the release.
 
-Use `git tag -a` instead of `-s` only when signed Git tags are not configured.
-Pushing the tag starts the workflow. In GitHub, open **Actions**, watch the
-release job, then open **Releases** and confirm that both ZIPs, `SHA256SUMS`, and
-the repository's attestation record are present before sharing the release.
-
-If the workflow fails before release creation, fix the problem, delete and
-recreate the local tag at the corrected commit, and push it only if the tag was
-never distributed. If a release or tag has already been shared, keep it
-immutable and publish a new patch version instead.
+If the workflow fails, fix the problem and push the correction to `master`; that
+push receives a new run number and creates a new release. If a release has
+already been shared, keep it immutable and let the correction create another
+dated release.
 
 ## Why this arrangement
 
 - `dotnet test` gates publication, so a failing tag does not produce a release.
 - `-r` and `--self-contained true` produce architecture-specific executables
   that do not require .NET on the user's computer.
-- Stable asset names support GitHub's `/releases/latest/download/...` URLs after
-  Portster has a non-prerelease release.
+- Stable asset names support GitHub's `/releases/latest/download/...` URLs.
 - `SHA256SUMS` detects corrupted or substituted downloads.
 - Artifact attestations link the archives to the repository and workflow that
   built them. Users can verify one with GitHub CLI, for example:
